@@ -229,5 +229,52 @@ typedef struct list{
 
 ### *对象
 
+前面的数据结构并不是直接被用在redis中，而是基于这些数据结构创建了一个对象系统：<font color="red">字符串对象，列表对象，哈希对象，集合对象，有序集合对象。</font>
+
++ **TYPE命令**
+
+  ```c++
+  SET msg "hello"
+  TYPE msg  ->  string
+  ```
+
+  从上面可以看出TYPE命令返回的结果是数据库键对应的值对象的类型。
+
++ **OBJECTENCODING**：查看数据库键的值对象的编码。
+
+  ~~~ c
+  SET msg "hello"
+  OBJECTENCODING msg   输出：embstr(embatr编码的简单动态字符串)
+  SADD num 1 3 5
+  OBJECT ENCODING msg  输出：intset(整数类型)
+  
+  ~~~
+
++ **字符串对象**
+
+  - 当长度小于39时，采用的是embstr编码，大于39采用的是raw(简单动态字符串)。
+  - raw和embstr的区别：
+    - raw需要调用两次内存分配函数来分配redisObject(对象结构的底层实现：类型，编码，指向底层实现的指针)结构和sdshdr(SDS结构)结构，embstr只需要一次即可，并且这两个结构的时紧挨着
+    - 回收时，raw需要调用两次内存释放函数，embstr只需要一次。
+
++ **列表对象**
+
+  列表对象的编码可以是ziplist(压缩列表)，linkedlist(链表)
+
+  当列表对象保存的所偶字符串元素长度都小于64字节，并且列表对象保存的元素数量小于512个----》ziplist
+
++ **哈希对象**
+
+  哈希对象的编码可以是ziplist或者hashtable
+
++ **集合对象**
+
+  集合对象的编码可以时intset或者hashtable
+
+  当集合对象保存的所有元素都是整数值，且集合对象保存的元素数量不超过512个，此时使用的时ziplist数据结构
+
++ **有序集合对象**
+
+  有序集合对象可以是ziplist或者skiplist(跳跃表和字典)
 
 
